@@ -250,7 +250,7 @@ public class BluetoothManager {
      */
     public void sendData(String data) {
         if (connectedThread != null) {
-            connectedThread.write(data.getBytes());
+            connectedThread.write((data + "\n").getBytes());
             databaseHelper.insertLog("OUT", data);
         }
     }

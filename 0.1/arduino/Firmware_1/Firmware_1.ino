@@ -58,7 +58,7 @@ int PID_values_fixed =0;
 
 void setup() {  
   pinMode(EN, OUTPUT);
-  digitalWrite(EN, HIGH);     //Stepper driver is disbled
+  digitalWrite(EN, HIGH);     //Stepper driver is disabled
   stepper1.setMaxSpeed(max_speed);  
   pinMode(but1, INPUT_PULLUP);
   pinMode(speed_pot, INPUT);
@@ -66,13 +66,16 @@ void setup() {
   digitalWrite(LED, LOW);
   
   pinMode(PWM_pin,OUTPUT);
-  TCCR0B = TCCR0B & B11111000 | B00000010;    // D6 adn D6 PWM frequency of 7812.50 Hz
+  TCCR0B = TCCR0B & B11111000 | B00000010;    // D5 and D6 PWM frequency of 7812.50 Hz
   Time = millis();
 
   TCCR1A = 0;             //Reset entire TCCR1A register
   TCCR1B = 0;             //Reset entire TCCR1B register
-  TCCR1A |= B00000010;    //   /8
+  TCCR1B |= B00000010;    //Prescaler /8
+  TCCR1B |= (1 << WGM12); //CTC mode (Clear Timer on Compare Match)
+  OCR1A = 2000;           //Compare value for ~100 Hz step rate (16MHz/8/2000 = 1000 Hz)
   TCNT1 = 0;              //Reset Timer 1 value to 0
+  TIMSK1 |= (1 << OCIE1A); //Enable Timer1 compare match A interrupt
   
   lcd.init();
   lcd.backlight();

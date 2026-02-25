@@ -180,8 +180,12 @@ public class ControlActivity extends AppCompatActivity implements BluetoothManag
         });
 
         buttonConnect.setOnClickListener(v -> {
-            String selected = spinnerBluetoothDevices.getSelectedItem().toString();
-            String mac = selected.split(" - ")[1];
+            Object selected = spinnerBluetoothDevices.getSelectedItem();
+            if (selected == null) {
+                showToast("請先選擇設備");
+                return;
+            }
+            String mac = selected.toString().split(" - ")[1];
             bluetoothManager.connect(mac);
         });
 
@@ -208,6 +212,7 @@ public class ControlActivity extends AppCompatActivity implements BluetoothManag
             if (!temp.isEmpty() && !speed.isEmpty()) {
                 bluetoothManager.sendData("SET_TEMP:" + temp);
                 bluetoothManager.sendData("SET_SPEED:" + speed);
+                bluetoothManager.sendData("SAVE");
                 showToast("設定已保存");
             } else {
                 showToast("請輸入溫度與速度");
@@ -368,8 +373,8 @@ public class ControlActivity extends AppCompatActivity implements BluetoothManag
      */
     @Override
     public void onDataReceived(String data) {
-        if (data.contains("STATUS_UPDATE:")) {
-            parseStatusData(data.replace("STATUS_UPDATE:", ""));
+        if (data.contains("TEMP:") && data.contains("SPEED:") && data.contains("STATUS:")) {
+            parseStatusData(data);
         } else if (data.contains("TEMP:")) {
             // Temperature info
             String temp = data.replace("TEMP:", "").trim();
