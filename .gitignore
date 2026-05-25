@@ -1,0 +1,14 @@
+# ==================== 通用忽略規則 ====================
+*.iml
+.DS_Store
+Thumbs.db
+
+# ==================== Android App 專案忽略規則 ====================
+Android App/.gradle/
+Android App/local.properties
+Android App/.idea/
+Android App/build/
+Android App/captures/
+Android App/.externalNativeBuild/
+Android App/.cxx/
+
