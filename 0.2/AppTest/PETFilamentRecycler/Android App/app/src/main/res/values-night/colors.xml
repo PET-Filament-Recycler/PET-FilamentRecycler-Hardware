@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#2DD4BF</color>
+    <color name="primary_dark">#14B8A6</color>
+    <color name="primary_light">#5EEAD4</color>
+    <color name="on_primary">#042F2E</color>
+
+    <color name="secondary">#FBBF24</color>
+    <color name="on_secondary">#1C1917</color>
+
+    <color name="tertiary">#818CF8</color>
+    <color name="on_tertiary">#1E1B4B</color>
+
+    <color name="background">#0F172A</color>
+    <color name="surface">#1E293B</color>
+    <color name="surface_variant">#334155</color>
+    <color name="on_background">#F1F5F9</color>
+    <color name="on_surface">#F8FAFC</color>
+    <color name="on_surface_variant">#94A3B8</color>
+    <color name="outline">#475569</color>
+
+    <color name="success">#34D399</color>
+    <color name="success_container">#064E3B</color>
+    <color name="on_success_container">#A7F3D0</color>
+
+    <color name="warning">#FBBF24</color>
+    <color name="warning_container">#78350F</color>
+    <color name="on_warning_container">#FEF3C7</color>
+
+    <color name="error">#F87171</color>
+    <color name="error_container">#7F1D1D</color>
+    <color name="on_error_container">#FECACA</color>
+
+    <color name="info">#60A5FA</color>
+    <color name="info_container">#1E3A8A</color>
+    <color name="on_info_container">#DBEAFE</color>
+</resources>

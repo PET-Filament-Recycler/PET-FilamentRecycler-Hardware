@@ -1,0 +1,62 @@
+<resources>
+    <string name="app_name">PET Filament Recycler</string>
+    <string name="app_subtitle">Smart control for your recycling machine</string>
+    <string name="app_hero_description">Monitor temperature, speed, and machine status over Bluetooth</string>
+    <string name="start_control">Open Control Panel</string>
+    <string name="bluetooth_section">Bluetooth Connection</string>
+    <string name="connected_devices">Available Devices</string>
+    <string name="refresh">Refresh</string>
+    <string name="connect">Connect</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="machine_status">Live Status</string>
+    <string name="temperature_hint">Target Temperature (°C)</string>
+    <string name="speed_hint">Target Speed (mm/s)</string>
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
+    <string name="save_settings">Save Settings</string>
+    <string name="view_logs">View Logs</string>
+    <string name="back">Back</string>
+    <string name="logs_title">Communication Logs</string>
+    <string name="not_connected">Not Connected</string>
+    <string name="connected">Connected</string>
+    <string name="connecting">Connecting…</string>
+    <string name="control_title">Machine Control</string>
+    <string name="switch_language">中文</string>
+
+    <string name="status_temp_label">TEMP</string>
+    <string name="status_speed_label">SPEED</string>
+    <string name="status_power_label">STATUS</string>
+    <string name="status_temp_placeholder">TEMP: —</string>
+    <string name="status_speed_placeholder">SPEED: —</string>
+    <string name="status_temp_value">TEMP: %1$.0f</string>
+    <string name="status_speed_value">SPEED: %1$d</string>
+    <string name="status_power_on">STATUS: ON</string>
+    <string name="status_power_off">STATUS: OFF</string>
+    <string name="status_power_unknown">STATUS: —</string>
+
+    <string name="already_connected_no_scan">Already connected. No need to scan again.</string>
+    <string name="refreshing_devices">Refreshing BLE device list…</string>
+    <string name="select_device_first">Please select a device first</string>
+    <string name="invalid_device_format">Invalid device format</string>
+    <string name="disconnected">Disconnected</string>
+    <string name="connection_lost">Connection lost</string>
+    <string name="enter_temp_and_speed">Please enter temperature and speed</string>
+    <string name="invalid_number">Please enter valid numbers</string>
+    <string name="temp_range_error">Temperature must be between %1$d and %2$d °C</string>
+    <string name="speed_range_error">Speed must be between %1$d and %2$d mm/s</string>
+    <string name="settings_sent">Settings sent</string>
+    <string name="permission_denied_bluetooth">Bluetooth permission denied</string>
+    <string name="enable_bluetooth">Please enable Bluetooth</string>
+    <string name="ble_connected">BLE connected</string>
+
+    <string name="log_empty">No communication logs yet.\nConnect to a device to start recording.</string>
+    <string name="log_refresh">Refresh</string>
+    <string name="log_clear">Clear Logs</string>
+    <string name="log_clear_confirm">Delete all communication logs? This cannot be undone.</string>
+    <string name="log_cleared">Logs cleared</string>
+    <string name="log_refreshed">Logs refreshed</string>
+    <string name="log_direction_in">Receive</string>
+    <string name="log_direction_out">Send</string>
+    <string name="log_header">[%1$s] %2$s</string>
+    <string name="log_header_with_device">[%1$s] %2$s · %3$s</string>
+</resources>

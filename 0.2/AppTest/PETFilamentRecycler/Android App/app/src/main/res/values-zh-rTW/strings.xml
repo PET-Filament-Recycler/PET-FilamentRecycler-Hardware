@@ -1,0 +1,62 @@
+<resources>
+    <string name="app_name">PET 塑膠回收機</string>
+    <string name="app_subtitle">智慧控制您的回收擠出系統</string>
+    <string name="app_hero_description">透過藍牙即時監控溫度、速度與系統狀態</string>
+    <string name="start_control">開啟控制面板</string>
+    <string name="bluetooth_section">藍牙連線</string>
+    <string name="connected_devices">可用設備</string>
+    <string name="refresh">重新掃描</string>
+    <string name="connect">連接</string>
+    <string name="disconnect">斷開</string>
+    <string name="machine_status">即時狀態</string>
+    <string name="temperature_hint">目標溫度 (°C)</string>
+    <string name="speed_hint">目標速度 (mm/s)</string>
+    <string name="start">開機</string>
+    <string name="stop">關機</string>
+    <string name="save_settings">儲存設定</string>
+    <string name="view_logs">查看紀錄</string>
+    <string name="back">返回</string>
+    <string name="logs_title">通訊紀錄</string>
+    <string name="not_connected">未連接</string>
+    <string name="connected">已連接</string>
+    <string name="connecting">連接中…</string>
+    <string name="control_title">機器控制</string>
+    <string name="switch_language">EN</string>
+
+    <string name="status_temp_label">溫度</string>
+    <string name="status_speed_label">速度</string>
+    <string name="status_power_label">狀態</string>
+    <string name="status_temp_placeholder">TEMP: —</string>
+    <string name="status_speed_placeholder">SPEED: —</string>
+    <string name="status_temp_value">TEMP: %1$.0f</string>
+    <string name="status_speed_value">SPEED: %1$d</string>
+    <string name="status_power_on">STATUS: ON</string>
+    <string name="status_power_off">STATUS: OFF</string>
+    <string name="status_power_unknown">STATUS: —</string>
+
+    <string name="already_connected_no_scan">目前已連接，無需重新掃描</string>
+    <string name="refreshing_devices">正在刷新 BLE 設備列表…</string>
+    <string name="select_device_first">請先選擇設備</string>
+    <string name="invalid_device_format">設備資料格式錯誤</string>
+    <string name="disconnected">已斷開連接</string>
+    <string name="connection_lost">連線已中斷</string>
+    <string name="enter_temp_and_speed">請輸入溫度與速度</string>
+    <string name="invalid_number">請輸入有效數字</string>
+    <string name="temp_range_error">溫度必須在 %1$d 至 %2$d °C 之間</string>
+    <string name="speed_range_error">速度必須在 %1$d 至 %2$d mm/s 之間</string>
+    <string name="settings_sent">設定已送出</string>
+    <string name="permission_denied_bluetooth">藍牙權限被拒絕</string>
+    <string name="enable_bluetooth">請啟用藍牙</string>
+    <string name="ble_connected">BLE 已連接</string>
+
+    <string name="log_empty">尚無通訊紀錄。\n連接設備後會自動記錄。</string>
+    <string name="log_refresh">重新整理</string>
+    <string name="log_clear">清除紀錄</string>
+    <string name="log_clear_confirm">確定要刪除所有通訊紀錄嗎？此操作無法復原。</string>
+    <string name="log_cleared">紀錄已清除</string>
+    <string name="log_refreshed">紀錄已更新</string>
+    <string name="log_direction_in">接收</string>
+    <string name="log_direction_out">傳送</string>
+    <string name="log_header">[%1$s] %2$s</string>
+    <string name="log_header_with_device">[%1$s] %2$s · %3$s</string>
+</resources>
