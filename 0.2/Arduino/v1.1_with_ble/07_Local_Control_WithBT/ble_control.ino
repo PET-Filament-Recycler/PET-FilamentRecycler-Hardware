@@ -36,6 +36,9 @@ float clampBleSpeed(float value) {
   if (value > BLE_APP_SPEED_MAX) value = BLE_APP_SPEED_MAX;
   if (value < STEPPER_SPEED_MIN) value = STEPPER_SPEED_MIN;
   if (value > STEPPER_SPEED_MAX) value = STEPPER_SPEED_MAX;
+  if (value > 0.0f && value < STEPPER_MIN_RUN_SPEED) {
+    value = STEPPER_MIN_RUN_SPEED;
+  }
   return value;
 }
 
@@ -66,6 +69,10 @@ String buildBleStatusString(float measuredTempC) {
   } else {
     msg += String((int)round(measuredTempC));
   }
+  msg += ",TARGET:";
+  msg += String((int)round(targetTempC));
+  msg += ",HEAT:";
+  msg += String((heaterPwmDuty * 100) / PID_MAX_OUTPUT);
   msg += ",SPEED:";
   msg += String((int)round(currentStepperSpeed));
   msg += ",STATUS:";
@@ -92,8 +99,10 @@ void notifyBleLog(const String& msg) {
     bleLogChar->notify();
   }
 
-  Serial.print("BLE LOG -> ");
-  Serial.println(msg);
+  if (serialLoggingAllowed()) {
+    Serial.print("BLE LOG -> ");
+    Serial.println(msg);
+  }
 }
 
 void applyBleSpeed(float speed) {
@@ -110,8 +119,10 @@ void processBleCommand(const String& cmdRaw, float measuredTempC) {
   cmd.trim();
   if (cmd.length() == 0) return;
 
-  Serial.print("BLE CMD <- ");
-  Serial.println(cmd);
+  if (serialLoggingAllowed()) {
+    Serial.print("BLE CMD <- ");
+    Serial.println(cmd);
+  }
 
   if (cmd == "START") {
     applyAppRunCommand(true);
@@ -123,7 +134,16 @@ void processBleCommand(const String& cmdRaw, float measuredTempC) {
     notifyBleStatus(measuredTempC);
   } else if (cmd.startsWith("SET_TEMP:")) {
     float value = clampBleTemp(cmd.substring(9).toFloat());
+    // App setpoint replaces the boot default (255C) or any previous target.
     targetTempC = value;
+    pidIntegral = 0.0f;
+    pidPreviousError = 0.0f;
+    if (!isnan(measuredTempC) && measuredTempC >= targetTempC) {
+      setHeaterPwm(0);
+    } else if (!isnan(measuredTempC) && measuredTempC <= (targetTempC - HEATER_HYSTERESIS_C)) {
+      heaterHoldOff = false;
+    }
+    logSetTarget(targetTempC);
     notifyBleLog("Temp set to " + String(targetTempC, 0) + " C");
     notifyBleStatus(measuredTempC);
   } else if (cmd.startsWith("SET_SPEED:")) {
@@ -181,6 +201,8 @@ void processBleSerialCommand(const String& cmdRaw) {
 }
 
 void readBleSerialCommands() {
+  if (!serialLoggingAllowed()) return;
+
   static String serialBuffer;
 
   while (Serial.available() > 0) {
@@ -199,13 +221,13 @@ void readBleSerialCommands() {
 class BleServerCallbacks : public BLEServerCallbacks {
   void onConnect(BLEServer *pServer) override {
     bleClientConnected = true;
-    Serial.println("BLE client connected");
+    logBtState(true);
     notifyBleLog("BLE client connected");
   }
 
   void onDisconnect(BLEServer *pServer) override {
     bleClientConnected = false;
-    Serial.println("BLE client disconnected");
+    logBtState(false);
     notifyBleLog("BLE client disconnected");
     releaseAppRunControl();
 
@@ -256,7 +278,7 @@ void setupBle() {
   );
   bleLogChar->addDescriptor(new BLE2902());
 
-  bleStatusChar->setValue("TEMP:0,SPEED:0,STATUS:OFF");
+  bleStatusChar->setValue("TEMP:0,TARGET:255,HEAT:0,SPEED:0,STATUS:OFF");
   bleLogChar->setValue("BLE Ready");
 
   service->start();
