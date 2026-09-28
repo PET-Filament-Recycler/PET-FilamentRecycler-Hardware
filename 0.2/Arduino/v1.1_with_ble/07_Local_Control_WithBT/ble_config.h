@@ -21,8 +21,15 @@
 #define BLE_APP_SPEED_MIN 0
 #define BLE_APP_SPEED_MAX 4096
 
+String buildBleStatusString(float measuredTempC);
+
 void setupBle();
 void loopBle(float measuredTempC);
 void notifyBleStatus(float measuredTempC);
 void notifyBleLog(const String& msg);
 void printBleSerialHelp();
+void logEvent(const char* msg);
+void logSetTarget(float tempC);
+void logHeatPercent(uint8_t duty);
+void logBtState(bool connected);
+void logMachineStatus(float measuredTempC);

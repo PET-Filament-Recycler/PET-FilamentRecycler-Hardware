@@ -1,41 +1,46 @@
+// Simple bang-bang heater control (no PWM):
+//   ON  when temp <= target - hysteresis
+//   OFF when temp >= target
+//   hold previous state in between
+//
+// If the app/LCD shows HEAT:0% / H:0 but temperature still rises,
+// the MOSFET/SSR is not following GPIO6 (hardware fault).
+
 void setupHeaterPwm() {
-#if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(3, 0, 0)
-  ledcAttach(HEATER_PIN, HEATER_PWM_FREQ, HEATER_PWM_BITS);
-#else
-  ledcSetup(HEATER_PWM_CHANNEL, HEATER_PWM_FREQ, HEATER_PWM_BITS);
-  ledcAttachPin(HEATER_PIN, HEATER_PWM_CHANNEL);
-#endif
-  setHeaterPwm(0);
+  pinMode(HEATER_PIN, OUTPUT);
+  forceHeaterOff();
 }
 
-void writeHeaterPwm(uint8_t duty) {
-#if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(3, 0, 0)
-  ledcWrite(HEATER_PIN, duty);
-#else
-  ledcWrite(HEATER_PWM_CHANNEL, duty);
-#endif
+// Drive the heater MOSFET/SSR gate. HEATER_ACTIVE_HIGH=true means HIGH=ON.
+void writeHeaterGate(bool on) {
+  bool levelHigh = HEATER_ACTIVE_HIGH ? on : !on;
+  pinMode(HEATER_PIN, OUTPUT);
+  digitalWrite(HEATER_PIN, levelHigh ? HIGH : LOW);
 }
 
+void forceHeaterOff() {
+  heaterPwmDuty = 0;
+  heaterState = false;
+  heaterHoldOff = true;
+  writeHeaterGate(false);
+  logHeatPercent(0);
+}
+
+void forceHeaterOn() {
+  heaterPwmDuty = PID_MAX_OUTPUT;
+  heaterState = true;
+  heaterHoldOff = false;
+  writeHeaterGate(true);
+  logHeatPercent(PID_MAX_OUTPUT);
+}
+
+// Kept for call sites that still pass a PWM duty. Any non-zero value = full ON.
 void setHeaterPwm(uint8_t duty) {
-  if (duty > PID_MAX_OUTPUT) {
-    duty = PID_MAX_OUTPUT;
+  if (duty == 0) {
+    forceHeaterOff();
+  } else {
+    forceHeaterOn();
   }
-  heaterPwmDuty = duty;
-  heaterState = (duty > 0);
-  writeHeaterPwm(duty);
-}
-
-int rampHeaterPwm(int targetDuty) {
-  if (targetDuty < 0) targetDuty = 0;
-  if (targetDuty > PID_MAX_OUTPUT) targetDuty = PID_MAX_OUTPUT;
-
-  int delta = targetDuty - (int)heaterPwmDuty;
-  if (delta > PID_PWM_MAX_STEP) {
-    targetDuty = heaterPwmDuty + PID_PWM_MAX_STEP;
-  } else if (delta < -PID_PWM_MAX_STEP) {
-    targetDuty = heaterPwmDuty - PID_PWM_MAX_STEP;
-  }
-  return targetDuty;
 }
 
 void resetPidState() {
@@ -43,11 +48,13 @@ void resetPidState() {
   pidPreviousError = 0.0f;
   pidIntegral = 0.0f;
   pidOutput = 0.0f;
-  setHeaterPwm(0);
+  forceHeaterOff();
 }
 
 void setHeater(bool on) {
-  if (!on) {
+  if (on) {
+    forceHeaterOn();
+  } else {
     resetPidState();
   }
 }
@@ -56,7 +63,6 @@ int readAveragedADC() {
   long sum = 0;
   for (int i = 0; i < AVG_SAMPLES; i++) {
     sum += analogRead(THERMISTOR_PIN);
-    delay(2);
   }
   return sum / AVG_SAMPLES;
 }
@@ -66,61 +72,44 @@ double adcToTempC(int adc) {
 
   double R = SERIES_R / ((double)ADC_MAX / (double)adc - 1.0);
   double lnR = log(R / R0);
-  double tempK = 1.0 / (1.0 / T0 + lnR / BETA);
+  double tempK = 1.0 / (1.0 / THERMISTOR_T0_K + lnR / BETA);
   return tempK - 273.15;
 }
 
 void updatePidHeater(double tempC) {
+  // Always off when machine is stopped (app Stop or hardware run switch).
   if (!machineRunning) {
-    setHeaterPwm(0);
+    forceHeaterOff();
     return;
   }
 
   unsigned long now = millis();
   if (now - lastPidMs < PID_UPDATE_MS) return;
-
-  float dt = (now - lastPidMs) / 1000.0f;
   lastPidMs = now;
-  if (dt <= 0.0f) {
-    dt = PID_UPDATE_MS / 1000.0f;
-  }
 
-  if (isnan(tempC)) {
-    setHeaterPwm(0);
+  if (isnan(tempC) || tempC > MAX_SAFE_TEMP_C) {
+    forceHeaterOff();
     return;
   }
 
-  if (tempC > MAX_SAFE_TEMP_C) {
-    setHeaterPwm(0);
-    return;
-  }
-
-  float controlTarget = targetTempC + PID_CALIBRATION_OFFSET_C;
-  pidError = controlTarget - (float)tempC;
-
-  float pidP = PID_KP * pidError;
-  if (pidError > 0.0f) {
-    pidIntegral += PID_KI * pidError * dt;
-  } else {
-    pidIntegral += PID_KI * pidError * dt * 0.5f;
-  }
-  pidIntegral = constrain(pidIntegral, 0.0f, (float)PID_MAX_OUTPUT);
-  float pidD = PID_KD * (pidError - pidPreviousError) / dt;
-
-  int maxDuty = PID_MAX_OUTPUT;
-  if (tempC >= controlTarget) {
-    maxDuty = 0;
-    pidIntegral = 0.0f;
-  } else if (tempC >= controlTarget - PID_APPROACH_BAND_C) {
-    float ratio = (controlTarget - (float)tempC) / PID_APPROACH_BAND_C;
-    int approachCap = (int)(PID_APPROACH_MAX_PWM * ratio);
-    if (approachCap < maxDuty) {
-      maxDuty = approachCap;
+  // Bang-bang with hysteresis around the app/hardware setpoint.
+  if (tempC >= targetTempC) {
+    // Hit / above set temperature -> heater OFF, wait to cool.
+    if (heaterState) {
+      notifyBleLog("Heater OFF at setpoint");
     }
+    forceHeaterOff();
+    return;
   }
 
-  pidOutput = constrain(pidP + pidIntegral + pidD, 0.0f, (float)maxDuty);
-  setHeaterPwm((uint8_t)rampHeaterPwm((int)pidOutput));
+  if (tempC <= (targetTempC - HEATER_HYSTERESIS_C)) {
+    // Cooled below setpoint - hysteresis -> heater ON again.
+    if (!heaterState) {
+      notifyBleLog("Heater ON below setpoint");
+    }
+    forceHeaterOn();
+    return;
+  }
 
-  pidPreviousError = pidError;
+  // Between (target - hysteresis) and target: keep current on/off state.
 }
