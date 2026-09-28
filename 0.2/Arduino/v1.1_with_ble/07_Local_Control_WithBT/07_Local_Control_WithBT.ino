@@ -1,3 +1,6 @@
+// Bare-board CH343 testing: uncomment so STEP/DIR avoid UART0 (GPIO16/17).
+// #define PET_BENCH_NO_STEPPER_ON_UART 1
+
 #include <Wire.h>
 #include <hd44780.h>
 #include <hd44780ioClass/hd44780_I2Cexp.h>
@@ -21,14 +24,20 @@ void setup() {
   Serial.println();
   Serial.println("=== PET Recycle v1.1 (Local + BLE) ===");
   Serial.println("Boot: POWERON");
+#if PET_BENCH_NO_STEPPER_ON_UART
+  Serial.println("Bench mode: STEP/DIR on GPIO4/5, CH343 serial stays active");
+#else
+  Serial.println("Serial logging stops when motor runs (GPIO16/17 = CH343 + STEP/DIR)");
+#endif
 
   pinMode(BTN_START_END, INPUT_PULLUP);
   pinMode(BTN_TEMP_PLUS, INPUT_PULLUP);
   pinMode(BTN_TEMP_MINUS, INPUT_PULLUP);
   pinMode(FAN_PIN, OUTPUT);
   pinMode(EN_PIN, OUTPUT);
-  pinMode(DIR_PIN, OUTPUT);
   pinMode(STEP_PIN, OUTPUT);
+  pinMode(DIR_PIN, OUTPUT);
+  // STEP/DIR (GPIO16/17) share UART0 with CH343; AccelStepper claims them on first runSpeed().
 
   setupHeaterPwm();
   digitalWrite(FAN_PIN, LOW);
@@ -37,6 +46,7 @@ void setup() {
 
   analogReadResolution(12);
   Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN);
+  Wire.setTimeOut(1000);
   Serial.println("I2C init OK");
 
   int status = lcd.begin(16, 2);
@@ -61,6 +71,7 @@ void setup() {
 
   stepper.setMaxSpeed(STEPPER_SPEED_MAX);
   stepper.setSpeed(0);
+  stablePotRaw = readAveragedPotRaw();
   Serial.println("Stepper init OK");
 
   lastRunSwitchOn = isRunSwitchOn();
@@ -86,6 +97,7 @@ void loop() {
   handleTempPlusButton();
   handleTempMinusButton();
   updateStepperSpeedFromPot();
+  serviceStepper();
 
   int raw = readAveragedADC();
   double tempC = adcToTempC(raw);
@@ -103,11 +115,10 @@ void loop() {
 
   updatePidHeater(tempC);
   handleFanControl();
-
-  if (machineRunning) {
-    stepper.runSpeed();
-  }
+  serviceStepper();
 
   updateLCD(tempC);
   loopBle((float)tempC);
+  serviceStepper();
+  logMachineStatus((float)tempC);
 }

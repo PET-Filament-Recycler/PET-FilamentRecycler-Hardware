@@ -31,6 +31,5 @@ void updateLCD(double tempC) {
   }
 
   lcd.print("H:");
-  lcd.print((heaterPwmDuty * 100) / PID_MAX_OUTPUT);
-  lcd.print("%");
+  lcd.print(heaterState ? "ON " : "OFF");
 }

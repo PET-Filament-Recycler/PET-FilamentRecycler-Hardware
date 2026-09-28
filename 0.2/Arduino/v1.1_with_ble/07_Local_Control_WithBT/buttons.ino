@@ -65,6 +65,7 @@ void handleTempPlusButton() {
       if (targetTempC > TARGET_TEMP_MAX) {
         targetTempC = TARGET_TEMP_MAX;
       }
+      logSetTarget(targetTempC);
     }
   }
 
@@ -82,6 +83,7 @@ void handleTempMinusButton() {
       if (targetTempC < TARGET_TEMP_MIN) {
         targetTempC = TARGET_TEMP_MIN;
       }
+      logSetTarget(targetTempC);
     }
   }
 
